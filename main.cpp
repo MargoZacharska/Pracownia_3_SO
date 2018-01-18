@@ -136,20 +136,14 @@ void dodajAktora(vector<std::pair<pthread_t*, DaneWatku*> > &vec, bool akcja()){
 int main(int argc, char *argv[])
 {
 	srand(time(NULL));
-	
-	//int atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]);
 
 	if (argc<5){
 		return 0;
 	}
 	int liczba_mysliwych = atoi(argv[1]);
-	//  atoi(argv[1]), 
 	int liczba_kucharzy = atoi(argv[2]);
-	//  atoi(argv[2]);
 	int liczba_zwierzyny = atoi(argv[3]);
-	//  atoi(argv[3]), 
 	int liczba_jedzenia = atoi(argv[4]);
-	//  atoi(argv[4]);
 
 	int calkowita_liczba_watkow = liczba_kucharzy + liczba_mysliwych;
 	liczbaAktorow.resource = calkowita_liczba_watkow;
