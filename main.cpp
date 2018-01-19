@@ -90,7 +90,7 @@ bool watekMysliwego(){
 	int hunterLack = roll_K6_dice();
 	int animalLack = roll_K6_dice();
 
-	if (hunterLack > animalLack){
+	if (hunterLack > animalLack + 3){
 		zwierzyna.add(1);
 	}
 	return jedzenie.TakeOneIfExists();
