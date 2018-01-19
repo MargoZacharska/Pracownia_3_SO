@@ -9,6 +9,10 @@
 
 using namespace std;
 
+#define KUCHARZ "kucharz"
+#define MYSLIWY "mysliwy"
+
+
 class ConcurrentResource
 {
 private:
@@ -33,7 +37,10 @@ public:
 
 struct DaneWatku{
 	bool (*akcja)();
+	bool zyje;
+	std::string rola;
 };
+
 
 ConcurrentResource::~ConcurrentResource()
 {
@@ -78,20 +85,24 @@ bool ConcurrentResource::TakeOneIfExists()
 }
 
 
+
 ConcurrentResource jedzenie;
 ConcurrentResource zwierzyna;
 ConcurrentResource liczbaAktorow;
 
 sem_t poczatekNocy;
 sem_t poczatekDnia;
-//int sem_init(sem_t *sem, int pshared, unsigned int value);
+
 
 bool watekMysliwego(){
 	int hunterLack = roll_K6_dice();
 	int animalLack = roll_K6_dice();
 
-	if (hunterLack > animalLack + 3){
+	if (hunterLack > animalLack){
 		zwierzyna.add(1);
+	}
+	if (animalLack >= hunterLack + 3){
+		return false;	
 	}
 	return jedzenie.TakeOneIfExists();
 }
@@ -105,6 +116,7 @@ void *watekOgolny(void *_dane){
 	} while (dane->akcja());
 
 	liczbaAktorow.add(-1);
+	dane->zyje = false;
 	sem_wait(&poczatekNocy);
 	sem_wait(&poczatekDnia);
 
@@ -120,7 +132,7 @@ bool watekKucharza(){
 	return jedzenie.TakeOneIfExists();
 }
 
-void dodajAktora(vector<std::pair<pthread_t*, DaneWatku*> > &vec, bool akcja()){
+void dodajAktora(vector<std::pair<pthread_t*, DaneWatku*> > &vec, bool akcja(), string rola){
 
 		pthread_t* t = new pthread_t;
 		DaneWatku* d = new DaneWatku;
@@ -128,10 +140,25 @@ void dodajAktora(vector<std::pair<pthread_t*, DaneWatku*> > &vec, bool akcja()){
 		p.first = t;
 		p.second = d;
 		d->akcja = akcja;
+		d->rola = rola;
+		d->zyje = true;
 		pthread_create(t, NULL, watekOgolny, (void*)d);
 
 		vec.push_back(p);
 	}
+
+
+int policzWystapienia(vector<std::pair<pthread_t*, DaneWatku*>> aktorzy, string rola)
+{
+	int c = 0;
+	for (vector<std::pair<pthread_t*, DaneWatku*>>::iterator i = aktorzy.begin(); i < aktorzy.end(); i++)
+	{
+		if (i->second->zyje && i->second->rola == rola)
+			c++;
+	}
+	return c;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -154,11 +181,11 @@ int main(int argc, char *argv[])
 	vector<std::pair<pthread_t*, DaneWatku*> > aktorzy;
 
 	for (int j = 0; j < liczba_mysliwych; j++){
-		dodajAktora(aktorzy, watekMysliwego);
+		dodajAktora(aktorzy, watekMysliwego, MYSLIWY);
 	}
 
 	for (int j = 0; j < liczba_kucharzy; j++){
-		dodajAktora(aktorzy, watekKucharza);
+		dodajAktora(aktorzy, watekKucharza, KUCHARZ);
 	}
 
 	jedzenie.add(liczba_jedzenia);
@@ -179,14 +206,24 @@ int main(int argc, char *argv[])
 			usleep(500*1000);
 		} while (tmp != 0);
 
-		cout << "Obecnie w osadzie mieszka:"
-			<< "\nkucharzy:  \t" << liczba_kucharzy
-			<< "\nmysliwych: \t" << liczba_mysliwych
-			<< "\nzwierzyny: \t" << zwierzyna.resource
-			<< "\njedzenia:  \t" << jedzenie.resource
-			<< "\n-------------------------------------\n";
+
 
 		calkowita_liczba_watkow_tmp = liczbaAktorow.resource;
+		
+		
+		cout << "Obecnie w osadzie mieszka:"
+			<< "\nCalkowita liczba osadnikow: \t" << calkowita_liczba_watkow_tmp
+			<< "\nkucharzy:  \t" << policzWystapienia(aktorzy, KUCHARZ)
+			<< "\nmysliwych: \t" << policzWystapienia(aktorzy, MYSLIWY)
+			<< "\nzwierzyny: \t" << zwierzyna.resource
+			<< "\njedzenia:  \t" << jedzenie.resource;
+			if (calkowita_liczba_watkow == 0)
+			{
+				cout << "\nOsada wyginela ";
+			}
+			cout  << "\n-------------------------------------\n";
+
+		//calkowita_liczba_watkow_tmp = liczbaAktorow.resource;
 		for (int i = 0; i < calkowita_liczba_watkow; i++){
 			sem_post(&poczatekDnia);
 		}
