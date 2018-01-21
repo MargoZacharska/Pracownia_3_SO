@@ -37,6 +37,7 @@ public:
 	void add(int x);
 	int get();
 	bool TakeOneIfExists();
+	bool CheckIfExists();
 };
 
 
@@ -93,6 +94,15 @@ bool ConcurrentResource::TakeOneIfExists()
 }
 
 
+bool ConcurrentResource::CheckIfExists(){
+	bool result = false;
+	pthread_mutex_lock(&mutex);
+	result = resource > 0;
+	pthread_mutex_unlock(&mutex);
+	return result;
+}
+
+
 ConcurrentResource jedzenie;
 ConcurrentResource zwierzyna;
 ConcurrentResource liczbaAktorow;
@@ -108,9 +118,10 @@ bool watekMysliwego(){
 	int animalLack = roll_K6_dice();
 
 	int polana = rand() % POLANY;
-	if (polany[polana].TakeOneIfExists()){
+	if (polany[polana].CheckIfExists()){
 		if (hunterLack > animalLack){
 			zwierzyna.add(1);
+			polany[polana].TakeOneIfExists();
 		}
 	}
 	if (animalLack >= hunterLack + 3){
