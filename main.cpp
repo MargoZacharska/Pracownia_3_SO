@@ -11,6 +11,8 @@ using namespace std;
 
 #define KUCHARZ "kucharz"
 #define MYSLIWY "mysliwy"
+#define POLANY 10
+#define ZWIERZYNA 50
 
 
 class ConcurrentResource
@@ -89,6 +91,7 @@ bool ConcurrentResource::TakeOneIfExists()
 ConcurrentResource jedzenie;
 ConcurrentResource zwierzyna;
 ConcurrentResource liczbaAktorow;
+ConcurrentResource polany[POLANY];
 
 sem_t poczatekNocy;
 sem_t poczatekDnia;
@@ -98,8 +101,11 @@ bool watekMysliwego(){
 	int hunterLack = roll_K6_dice();
 	int animalLack = roll_K6_dice();
 
-	if (hunterLack > animalLack){
-		zwierzyna.add(1);
+	int polana = rand() % POLANY;
+	if (polany[polana].TakeOneIfExists()){
+		if (hunterLack > animalLack + 3){
+			zwierzyna.add(1);
+		}
 	}
 	if (animalLack >= hunterLack + 3){
 		return false;	
@@ -229,6 +235,10 @@ int main(int argc, char *argv[])
 		}
 
 		calkowita_liczba_watkow = calkowita_liczba_watkow_tmp;
+		
+		for (int i = 0; i < ZWIERZYNA; i++){
+			polany[rand() % POLANY].resource++;
+		}
 
 		do{
 			sem_getvalue(&poczatekDnia, &tmp);
