@@ -118,14 +118,13 @@ bool watekMysliwego(){
 	int animalLack = roll_K6_dice();
 
 	int polana = rand() % POLANY;
-	if (polany[polana].CheckIfExists()){
-		if (hunterLack > animalLack){
+	if (hunterLack > animalLack){
+		if (polany[polana].TakeOneIfExists()){
 			zwierzyna.add(1);
-			polany[polana].TakeOneIfExists();
 		}
 	}
 	if (animalLack >= hunterLack + 3){
-		return false;	
+		return polany[polana].CheckIfExists();	
 	}
 	return jedzenie.TakeOneIfExists();
 }
