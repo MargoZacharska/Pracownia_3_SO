@@ -7,6 +7,8 @@
 #include "unistd.h"
 #include <vector>
 
+#include "ConcurrentResource.h"
+#include "ConcurrentResource_Queue.h"
 
 using namespace std;
 
@@ -16,29 +18,11 @@ using namespace std;
 #define POLANY 10
 #define ZWIERZYNA 50
 
-
-class ConcurrentResource
-{
-private:
-
-	pthread_mutex_t	mutex;
-
-public:
-
-	ConcurrentResource()
-	{
-		resource = 0;
-		pthread_mutex_init(&mutex, NULL);
-	}
-
-	~ConcurrentResource();
-
-	volatile int resource;
-	void add(int x);
-	int get();
-	bool TakeOneIfExists();
-	bool CheckIfExists();
-};
+ConcurrentResource_Queue jedzenie;
+ConcurrentResource_Queue zwierzyna;
+ConcurrentResource liczbaAktorow;
+ConcurrentResource polany[POLANY];
+volatile int numerDnia = 0;
 
 
 struct DaneWatku{
@@ -57,56 +41,9 @@ ConcurrentResource::~ConcurrentResource()
 int roll_K6_dice()
 {
 	int x;
-	x = rand() % 6;
+	x = (rand() % 6) + 1;
 	return x;
 }
-
-
-void ConcurrentResource::add(int x)
-{
-	pthread_mutex_lock(&mutex);
-	resource += x;
-	pthread_mutex_unlock(&mutex);
-}
-
-
-int ConcurrentResource::get()
-{
-	int value;
-	pthread_mutex_lock(&mutex);
-	value = resource;
-	pthread_mutex_unlock(&mutex);
-	return value;
-}
-
-
-bool ConcurrentResource::TakeOneIfExists()
-{
-	bool result = false;
-	pthread_mutex_lock(&mutex);
-	if (resource > 0)
-	{
-		resource--;
-		result = true;
-	}
-	pthread_mutex_unlock(&mutex);
-	return result;
-}
-
-
-bool ConcurrentResource::CheckIfExists(){
-	bool result = false;
-	pthread_mutex_lock(&mutex);
-	result = resource > 0;
-	pthread_mutex_unlock(&mutex);
-	return result;
-}
-
-
-ConcurrentResource jedzenie;
-ConcurrentResource zwierzyna;
-ConcurrentResource liczbaAktorow;
-ConcurrentResource polany[POLANY];
 
 
 sem_t poczatekNocy;
@@ -151,7 +88,9 @@ void *watekOgolny(void *_dane){
 bool watekKucharza(){
 	if (zwierzyna.TakeOneIfExists()){
 		int n = roll_K6_dice();
-		jedzenie.add(n);
+		for (int i = 0; i < n; i++){
+			jedzenie.add(numerDnia);
+		}
 	}
 	return jedzenie.TakeOneIfExists();
 }
@@ -173,10 +112,10 @@ void dodajAktora(vector<std::pair<pthread_t*, DaneWatku*> > &vec, bool akcja(), 
 	}
 
 
-int policzWystapienia(vector<std::pair<pthread_t*, DaneWatku*>> aktorzy, string rola)
+int policzWystapienia(vector<std::pair<pthread_t*, DaneWatku*> > aktorzy, string rola)
 {
 	int c = 0;
-	for (vector<std::pair<pthread_t*, DaneWatku*>>::iterator i = aktorzy.begin(); i < aktorzy.end(); i++)
+	for (vector<std::pair<pthread_t*, DaneWatku*> >::iterator i = aktorzy.begin(); i < aktorzy.end(); i++)
 	{
 		if (i->second->zyje && i->second->rola == rola)
 			c++;
@@ -225,7 +164,14 @@ int main(int argc, char *argv[])
 	jedzenie.add(liczba_jedzenia);
 	zwierzyna.add(liczba_zwierzyny);
 
+	for (int i = 0; i < liczba_jedzenia; i++){
+		jedzenie.add(0);
+	}
 
+	for (int i = 0; i < liczba_zwierzyny; i++){
+		zwierzyna.add(0);
+	}
+	
 	int calkowita_liczba_watkow_tmp;
 
 
@@ -247,16 +193,19 @@ int main(int argc, char *argv[])
 
 		calkowita_liczba_watkow_tmp = liczbaAktorow.resource;
 		
+		numerDnia++;
+		jedzenie.CleanStale(i);
+		zwierzyna.CleanStale(i);
 		
 		cout << "Obecnie w osadzie mieszka:"
 			<< "\nCalkowita liczba osadnikow: \t" << calkowita_liczba_watkow_tmp
 			<< "\nkucharzy:  \t" << policzWystapienia(aktorzy, KUCHARZ)
 			<< "\nmysliwych: \t" << policzWystapienia(aktorzy, MYSLIWY)
-			<< "\nzwierzyny: \t" << zwierzyna.resource
-			<< "\njedzenia:  \t" << jedzenie.resource;
+			<< "\nzwierzyny: \t" << zwierzyna.size()
+			<< "\njedzenia:  \t" << jedzenie.size();
 			if (calkowita_liczba_watkow_tmp == 0)
 			{
-				cout << "\nOsada wyginela\n";
+				cout << "\nOsada wyginela dnia: "<< i <<"\n";
 				break;
 			}
 			cout  << "\n-------------------------------------\n";
