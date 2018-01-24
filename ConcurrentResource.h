@@ -1,9 +1,9 @@
-
+#ifndef __ConcurrentResource__
+#define __ConcurrentResource__
 
 #include "sched.h"
 #include "pthread.h"
 
-using namespace std;
 
 class ConcurrentResource
 {
@@ -23,3 +23,6 @@ public:
 	bool CheckIfExists();
 	
 };
+
+
+#endif

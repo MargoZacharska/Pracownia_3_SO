@@ -1,8 +1,10 @@
+#ifndef __ConcurrentResource_Queue__
+#define __ConcurrentResource_Queue__
 
 #include <queue>
 #include "pthread.h"
 
-using namespace std;
+
 
 class ConcurrentResource_Queue
 {
@@ -23,3 +25,4 @@ public:
 };
 
 
+#endif
