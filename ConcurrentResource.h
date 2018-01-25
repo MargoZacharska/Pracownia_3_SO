@@ -19,9 +19,9 @@ public:
 	volatile int resource;
 	void add(int x);
 	int get();
+	int clean();
 	bool TakeOneIfExists();
 	bool CheckIfExists();
-	
 };
 
 

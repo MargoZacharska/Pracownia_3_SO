@@ -22,6 +22,8 @@ using namespace std;
 
 ConcurrentResource_Queue jedzenie;
 ConcurrentResource_Queue zwierzyna;
+ConcurrentResource zwierzyna_upolowana_danego_dnia;
+ConcurrentResource jedzenie_ugotowane_danego_dnia;
 ConcurrentResource liczbaAktorow;
 ConcurrentResource polany[POLANY];
 volatile int numerDnia = 0;
@@ -55,6 +57,7 @@ bool watekMysliwego(){
 	if (hunterLack > animalLack){
 		if (polany[polana].TakeOneIfExists()){
 			zwierzyna.add(1);
+			zwierzyna_upolowana_danego_dnia.add(1);
 		}
 	}
 	if (animalLack >= hunterLack + 3){
@@ -87,6 +90,7 @@ bool watekKucharza(){
 		int n = roll_K6_dice();
 		for (int i = 0; i < n; i++){
 			jedzenie.add(numerDnia);
+			jedzenie_ugotowane_danego_dnia.add(1);
 		}
 	}
 	return jedzenie.TakeOneIfExists();
@@ -135,6 +139,11 @@ int main(int argc, char *argv[])
 	int liczba_kucharzy = atoi(argv[2]);
 	int liczba_zwierzyny = atoi(argv[3]);
 	int liczba_jedzenia = atoi(argv[4]);
+	
+	int liczbaKucharzy;
+	int liczbaMysliwych;
+	int food;
+	int animal;
 
 
 	int calkowita_liczba_watkow = liczba_kucharzy + liczba_mysliwych;
@@ -187,7 +196,7 @@ int main(int argc, char *argv[])
 			usleep(500*1000);
 		} while (tmp != 0);
 
-
+//zaczela sie noc
 		calkowita_liczba_watkow_tmp = liczbaAktorow.resource;
 		
 		numerDnia++;
@@ -207,6 +216,27 @@ int main(int argc, char *argv[])
 			}
 			cout  << "\n-------------------------------------\n";
 
+		liczbaKucharzy = policzWystapienia(aktorzy, KUCHARZ);
+		liczbaMysliwych = policzWystapienia(aktorzy, MYSLIWY);
+		food = jedzenie_ugotowane_danego_dnia.resource;
+		animal = zwierzyna_upolowana_danego_dnia.resource;
+
+		if(food > 0 && animal >0){
+			if((liczbaKucharzy / food) < 2 && (liczbaKucharzy / food) > 0 && 
+			(liczbaMysliwych / animal) < 2 && (liczbaMysliwych / animal) > 0){
+				if(liczbaKucharzy / food > liczbaMysliwych / animal){
+					dodajAktora(aktorzy, watekMysliwego, MYSLIWY);
+				}
+				else
+				{
+					dodajAktora(aktorzy, watekMysliwego, KUCHARZ);
+				}
+				calkowita_liczba_watkow_tmp += 1;
+			}
+		}
+			
+		jedzenie_ugotowane_danego_dnia.clean();
+		zwierzyna_upolowana_danego_dnia.clean();
 
 		for (int i = 0; i < calkowita_liczba_watkow; i++){
 			sem_post(&poczatekDnia);
@@ -225,7 +255,7 @@ int main(int argc, char *argv[])
 			sem_getvalue(&poczatekDnia, &tmp);
 			usleep(500*1000);
 		} while (tmp != 0);
-
+//zaczal sie now dzien
 	}
 
 	return 0;

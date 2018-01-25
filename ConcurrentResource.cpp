@@ -52,3 +52,7 @@ bool ConcurrentResource::CheckIfExists(){
 	pthread_mutex_unlock(&mutex);
 	return result;
 }
+
+int ConcurrentResource::clean(){
+	return resource = 0;
+}
