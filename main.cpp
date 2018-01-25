@@ -19,6 +19,7 @@ using namespace std;
 #define POLANY 10
 #define ZWIERZYNA 50
 
+
 ConcurrentResource_Queue jedzenie;
 ConcurrentResource_Queue zwierzyna;
 ConcurrentResource liczbaAktorow;
