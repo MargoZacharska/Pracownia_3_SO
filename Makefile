@@ -13,5 +13,5 @@ ConcurrentResource.o: ConcurrentResource.cpp ConcurrentResource.h
 	g++ -std=c++11 -pthread -Wall -Wextra -Werror -c ConcurrentResource.cpp
 	
 run :
-	./program 10 10 10 10
+	./program 
 

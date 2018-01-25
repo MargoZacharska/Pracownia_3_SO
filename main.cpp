@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
 	int calkowita_liczba_watkow_tmp;
 
 
-	for (int i = 0; i < 25; i++)
+	for (int i = 0; i < 365; i++)
 	{
 		int tmp = 0;
 
