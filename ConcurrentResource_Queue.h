@@ -5,13 +5,12 @@
 #include "pthread.h"
 
 
-
 class ConcurrentResource_Queue
 {
 private:
 
 	pthread_mutex_t	mutex;
-	queue <int> Queue;
+	std::queue <int> Queue;
 
 public:
 	ConcurrentResource_Queue();

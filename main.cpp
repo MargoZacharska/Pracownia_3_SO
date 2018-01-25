@@ -10,6 +10,7 @@
 #include "ConcurrentResource.h"
 #include "ConcurrentResource_Queue.h"
 
+
 using namespace std;
 
 
@@ -31,11 +32,6 @@ struct DaneWatku{
 	std::string rola;
 };
 
-
-ConcurrentResource::~ConcurrentResource()
-{
-	pthread_mutex_destroy(&mutex);
-}
 
 
 int roll_K6_dice()
